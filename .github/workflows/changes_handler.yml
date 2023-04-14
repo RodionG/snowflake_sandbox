@@ -1,0 +1,13 @@
+name: changes_handler
+
+on:
+  # Allows external webhook trigger
+  repository_dispatch:
+    types: [ generate_migration ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print artifact_path
+        run: echo  The path is ${{ github.event.client_payload.changes }}
