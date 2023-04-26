@@ -21,7 +21,7 @@ jobs:
           python-version: '3.10'
 
       - name: Generate migration with changes
-        run: python -m snowflow.generate_migration --config '${{ github.event.client_payload.config }}'
+        run: python -m snowflow.generate_migration --config ${{ github.event.client_payload.config }}
 
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v5
