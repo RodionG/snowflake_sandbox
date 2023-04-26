@@ -1,7 +1,7 @@
 import re
 import json
 import argparse
-from datetime import datetime
+from datetime import datetime, timedelta
 
 from utils.procedures import (
     get_setup_postgres_dms_table,
@@ -21,9 +21,12 @@ args = parser.parse_args()
 
 
 def generate_migration_filename() -> str:
-    current_timestamp = re.sub(r'\.\d+', '', str(datetime.now().timestamp()))
+    current_date=datetime.now()
+    current_timestamp = re.sub(r'\.\d+', '', str(current_date.timestamp()))
     
-    migration_name = f"migrations/{current_timestamp}_migration.sql"
+    migration_name = f"migrations/{current_timestamp}_changes_" \
+                     f"{current_date.strftime('%Y-%m-%d')}_" \
+                     f"{(current_date - timedelta(days=7)).strftime('%Y-%m-%d')}.sql"
     
     return migration_name
 
