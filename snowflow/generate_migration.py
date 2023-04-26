@@ -66,37 +66,37 @@ def main():
     migrations_configs = json.loads(args.config)
 
     for migration_config in migrations_configs:
-        if migration_config['required_procedure'] == 'setup_postgres_dms_table':
+        if migration_config['required_procedure'] == 'create_postgres_table':
             procedure_call_query = get_setup_postgres_dms_table(
-                s3_database_dir=migration_config['s3_database_dir'].lower(),
-                s3_schema_dir=migration_config['s3_schema_dir'].lower(),
-                sf_database=migration_config['sf_database'].upper(),
-                sf_schema=migration_config['sf_schema'].upper(),
-                sf_table=migration_config['sf_table'],
+                s3_db_dirname=migration_config['s3_db_dirname'],
+                s3_schema_dirname=migration_config['s3_schema_dirname'],
+                sf_db_name=migration_config['sf_db_name'],
+                sf_schema=migration_config['sf_schema'],
+                sf_table=migration_config['sf_table_name'],
                 id_column=get_columns_for_uid(migration_config['columns']),
-                shard_pattern=format_shard_pattern(migration_config['shard_pattern']),
+                s3_shard_dirname_pattern=format_shard_pattern(migration_config['s3_shard_dirname_pattern']),
                 is_partitioned=format_is_partitioned(migration_config['is_partitioned']),
                 columns=format_table_columns(migration_config['columns']),
             )
-        elif migration_config['required_procedure'] == 'alter_postgres_table_schema':
+        elif migration_config['required_procedure'] == 'alter_postgres_table':
             procedure_call_query = get_alter_postgres_table_schema(
-                s3_database_dir=migration_config['s3_database_dir'].lower(),
-                sf_database=migration_config['sf_database'].upper(),
+                s3_db_dirname=migration_config['s3_db_dirname'].lower(),
+                sf_db_name=migration_config['sf_db_name'],
                 sf_schema=migration_config['sf_schema'].upper(),
-                sf_table=migration_config['sf_table'],
+                sf_table=migration_config['sf_table_name'],
                 id_column=get_columns_for_uid(migration_config['columns']),
-                shard_pattern=format_shard_pattern(migration_config['shard_pattern']),
+                s3_shard_dirname_pattern=format_shard_pattern(migration_config['s3_shard_dirname_pattern']),
                 is_partitioned=format_is_partitioned(migration_config['is_partitioned']),
                 columns=format_table_columns(migration_config['columns']),
             )
-        elif migration_config['required_procedure'] == 'setup_clickhouse_pattern_table':
+        elif migration_config['required_procedure'] in ('create_clickhouse_table', 'alter_clickhouse_table'):
             procedure_call_query = get_setup_clickhouse_pattern_table(
-                s3_database_dir=migration_config['s3_database_dir'].lower(),
-                sf_table=migration_config['sf_table'].upper(),
+                s3_db_dirname=migration_config['s3_db_dirname'].lower(),
+                sf_table=migration_config['sf_table_name'],
                 s3_table_dir_pattern=migration_config['s3_table_dir_pattern'],
                 sf_schema=migration_config['sf_schema'].upper(),
                 columns=format_table_columns(migration_config['columns']),
-                pattern_columns=format_table_columns(migration_config['pattern_columns']),
+                pattern_columns=format_table_columns(migration_config.get('pattern_columns')),
             )
         migration_queries.append(procedure_call_query)
 
