@@ -30,6 +30,14 @@ def generate_migration_filename() -> str:
     
     return migration_name
 
+def generate_table_pattern_columns(s3_table_dir_pattern: str, s3_db_dirname_pattern: str, db_name: str = 'systems'):
+    pattern_columns = {}
+    if s3_db_dirname_pattern:
+        pattern_columns[f"'{db_name}_db'"] = f"'{s3_db_dirname_pattern}'"
+    if s3_table_dir_pattern and '([0-9]+)' in s3_table_dir_pattern:
+        pattern_columns[f"'partition'"] = f"'{s3_table_dir_pattern}'"
+    return pattern_columns
+    
 
 def format_table_columns(columns: dict) -> str:
     if columns:
@@ -99,7 +107,12 @@ def main():
                 s3_table_dir_pattern=migration_config['s3_table_dir_pattern'],
                 sf_schema=migration_config['sf_schema'].upper(),
                 columns=format_table_columns(migration_config['columns']),
-                pattern_columns=format_table_columns(migration_config.get('pattern_columns')),
+                pattern_columns=format_table_columns(
+                    generate_table_pattern_columns(
+                        migration_config.get('s3_table_dir_pattern'),
+                        migration_config.get('s3_db_dirname_pattern')
+                    )
+                ),
             )
         migration_queries.append(procedure_call_query)
 
