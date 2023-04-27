@@ -30,10 +30,10 @@ def generate_migration_filename() -> str:
     
     return migration_name
 
-def generate_table_pattern_columns(s3_table_dir_pattern: str, s3_db_dirname_pattern: str, db_name: str = 'systems'):
+def generate_table_pattern_columns(s3_table_dir_pattern: str, s3_db_dir_pattern: str, db_name: str = 'systems'):
     pattern_columns = {}
-    if s3_db_dirname_pattern:
-        pattern_columns[f"'{db_name}_db'"] = f"'{s3_db_dirname_pattern}'"
+    if s3_db_dir_pattern:
+        pattern_columns[f"'{db_name}_db'"] = f"'{s3_db_dir_pattern}'"
     if s3_table_dir_pattern and '([0-9]+)' in s3_table_dir_pattern:
         pattern_columns[f"'partition'"] = f"'{s3_table_dir_pattern}'"
     return pattern_columns
@@ -79,38 +79,38 @@ def main():
     for migration_config in migrations_configs:
         if migration_config['required_procedure'] == 'create_postgres_table':
             procedure_call_query = get_setup_postgres_dms_table(
-                s3_db_dirname=migration_config['s3_db_dirname'],
-                s3_schema_dirname=migration_config['s3_schema_dirname'],
-                sf_db_name=migration_config['sf_db_name'],
+                s3_db_dir=migration_config['s3_db_dir'],
+                s3_schema_dir=migration_config['s3_schema_dir'],
+                sf_database=migration_config['sf_database'],
                 sf_schema=migration_config['sf_schema'],
-                sf_table=migration_config['sf_table_name'],
+                sf_table=migration_config['db_table_name'],
                 id_column=get_columns_for_uid(migration_config['columns']),
-                s3_shard_dirname_pattern=format_shard_pattern(migration_config['s3_shard_dirname_pattern']),
+                s3_shard_dir_pattern=format_shard_pattern(migration_config['s3_shard_dir_pattern']),
                 is_partitioned=format_is_partitioned(migration_config['is_partitioned']),
                 columns=format_table_columns(migration_config['columns']),
             )
         elif migration_config['required_procedure'] == 'alter_postgres_table':
             procedure_call_query = get_alter_postgres_table_schema(
-                s3_db_dirname=migration_config['s3_db_dirname'].lower(),
-                sf_db_name=migration_config['sf_db_name'],
-                sf_schema=migration_config['sf_schema'].upper(),
-                sf_table=migration_config['sf_table_name'],
+                s3_db_dir=migration_config['s3_db_dir'],
+                sf_database=migration_config['sf_database'],
+                sf_schema=migration_config['sf_schema'],
+                sf_table=migration_config['db_table_name'],
                 id_column=get_columns_for_uid(migration_config['columns']),
-                s3_shard_dirname_pattern=format_shard_pattern(migration_config['s3_shard_dirname_pattern']),
+                s3_shard_dir_pattern=format_shard_pattern(migration_config['s3_shard_dir_pattern']),
                 is_partitioned=format_is_partitioned(migration_config['is_partitioned']),
                 columns=format_table_columns(migration_config['columns']),
             )
         elif migration_config['required_procedure'] in ('create_clickhouse_table', 'alter_clickhouse_table'):
             procedure_call_query = get_setup_clickhouse_pattern_table(
-                s3_db_dirname=migration_config['s3_db_dirname'].lower(),
-                sf_table=migration_config['sf_table_name'],
+                s3_db_dir=migration_config['s3_db_dir'],
+                sf_table=migration_config['db_table_name'],
                 s3_table_dir_pattern=migration_config['s3_table_dir_pattern'],
-                sf_schema=migration_config['sf_schema'].upper(),
+                sf_schema=migration_config['sf_schema'],
                 columns=format_table_columns(migration_config['columns']),
                 pattern_columns=format_table_columns(
                     generate_table_pattern_columns(
                         migration_config.get('s3_table_dir_pattern'),
-                        migration_config.get('s3_db_dirname_pattern')
+                        migration_config.get('s3_db_dir_pattern')
                     )
                 ),
             )
